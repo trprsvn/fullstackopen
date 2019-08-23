@@ -1,0 +1,28 @@
+browser->server: http get /spa
+server->browser: html-code
+note over browser:
+runs html code
+encounters link tag 
+request css file
+end note;
+browser->server: http get main.css
+server->browser: sends main.css
+note over browser:
+while rendering html code
+encounter script tag
+request js file
+end note
+browser->server: http get spa.js
+server->browser: returns spa.js
+note over browser:
+runs spa.js file
+create an ajax request
+to /data.json
+end note
+browser->server: http get /data.json
+server->browser: returns data.json file
+note over browser:
+browser parse json file 
+using vanilla javascript and
+manipulate dom with dom-api again using
+vanilla js.

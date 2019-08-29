@@ -3,12 +3,15 @@ import Person from './components/Person'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import personService from './services/persons'
+import Notification from './components/Notification'
 
 const App = () => {
   const [ persons, setPersons] = useState([]) 
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [newMessage, setNewMessage] = useState(null)
+  const [newMessageClass, setNewMessageClass] = useState('')
 
   const hook = () => {
     personService
@@ -21,7 +24,14 @@ const App = () => {
   const addName = (event) => {
     setNewName(event.target.value)
   }
-
+  const showMessage = (message, messageClass, mSec=2500) => {
+    setNewMessage(message)
+    setNewMessageClass(messageClass)
+    setTimeout(() => {
+      setNewMessage(null)
+      setNewMessageClass("")
+    }, mSec)
+  }
   const addPhoneBook = (event) => {
     event.preventDefault()
     const thePerson = persons.find((person) => person.name === newName)
@@ -38,12 +48,18 @@ const App = () => {
             .then(updatedObject => {
               setPersons(persons.map(person => 
                 updatedObject.id !== person.id ? person : updatedObject ))
+              showMessage(
+                `Updated ${thePerson.name}'s phone number`, 
+                'message notification')
             })
         }
     } else {
       personService
         .create({name: newName, number: newNumber})
-        .then(person => setPersons(persons.concat(person)))
+        .then(person => {
+          setPersons(persons.concat(person))
+          showMessage(`Added ${person.name}`, 'message notification')
+        })
     }
     setNewName('')
     setNewNumber('')
@@ -63,11 +79,19 @@ const App = () => {
     )
   }
   const deletePerson = (id) => {
-   if( window.confirm(`Delete ${(persons.find(person => id === person.id)).name}?`) ) {
+    const deletePerson = persons.find(person => id === person.id)
+   if( window.confirm(`Delete ${deletePerson.name}?`) ) {
     personService
     .destroy(id)
     .then(() => {
       setPersons(persons.filter(person => person.id !== id))
+    })
+    .catch(error => {
+      showMessage(
+        `Information of ${deletePerson.name} has already been removed from server`, 
+        "message error"
+      )
+      setPersons(persons.filter(p => p.id !== id ))
     })
    }
   }
@@ -78,6 +102,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification  message={newMessage} messageClass={newMessageClass}/>
       <Filter onChange={addFilter} value={newFilter}/>
       <h2>Add a new</h2>
       <PersonForm 
